@@ -17,8 +17,6 @@ function DFA(transition, final) {
 }
 
 DFA.prototype.minimize = function (mode) {
-	// Minimize with the Hopcroft Algorithm
-	// http://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm
 
 	// returns true if set1 = set2
 	function equals (set1, set2) {
@@ -57,7 +55,9 @@ DFA.prototype.minimize = function (mode) {
 		finalstates.add(this.final[i]);
 	}
 
-	// Hopcroft
+	// Minimize with the Hopcroft Algorithm
+	// http://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm
+	//
 	// P := {F, Q \ F};
 	// W := {F};
 	// while (W is not empty) do
@@ -75,7 +75,7 @@ DFA.prototype.minimize = function (mode) {
 	//           add Y \ X to W
 	//     end;
 	//   end;
-    // end;
+	// end;
 
 	let P = new Array(difference(states, finalstates), finalstates);
 	let W = new Array(finalstates);
@@ -84,8 +84,8 @@ DFA.prototype.minimize = function (mode) {
 		let A = W.pop();
 
 		// For each c in symbols
-		for (let j in symbols) {
-			let c = symbols[j];
+		for (let i in symbols) {
+			let c = symbols[i];
 
 			let X = new Set();
 			for (let state in this.transition) {
@@ -95,20 +95,19 @@ DFA.prototype.minimize = function (mode) {
 			}
 
 			if (X.size > 0) {
-				// We have found a X
-				for (let k = 0 ; k < P.length ; k++) {
-					let Y = P[k];
+				for (let j = 0 ; j < P.length ; k++) {
+					let Y = P[j];
 					let intersect = intersection(X, Y);
 					let diff = difference(Y, X);
 
 					if (intersect.size > 0 && diff.size > 0) {
-						P.splice(k, 1, intersect, diff);
+						P.splice(j, 1, intersect, diff);
 
 						// Search if Y is in W
 						let found = false;
-						for (let kk in W) {
-							if (equals(W[kk], Y)) {
-								W.splice(kk, 1, intersect, diff);
+						for (let k in W) {
+							if (equals(W[k], Y)) {
+								W.splice(k, 1, intersect, diff);
 								found = true;
 								break;
 							}
@@ -140,19 +139,19 @@ DFA.prototype.minimize = function (mode) {
 	let statenames = [];
 	for (let i in P) {
 		let txt = '';
-        switch (mode) {
-        	case 'digit':
-        		txt = i.toString();
-        		break;
-        	case 'letter':
-       			let n = parseInt(i) + 1;
+        	switch (mode) {
+			case 'digit':
+				txt = i.toString();
+				break;
+			case 'letter':
+				let n = parseInt(i) + 1;
 				let offset = 'a'.charCodeAt(0);
 				while (n > 0) {
 					n -= 1;
 					txt = String.fromCharCode((n % 26) + offset) + txt;
 					n = Math.floor(n / 26);
 				}
-        		break;
+				break;
 			case 'states':
 				let state = [...P[i]];
 				let prefix = '';
@@ -237,10 +236,7 @@ DFA.prototype.toGraphViz = function () {
 
 // #####################################################
 
-let dfa;
-let txt = '';
-
-dfa = new DFA(
+let dfa = new DFA(
 { 'a': { '0' : 'b', '1' : 'c' },
   'b': { '0' : 'a', '1' : 'd' },
   'c': { '0' : 'e', '1' : 'f' },
@@ -249,9 +245,11 @@ dfa = new DFA(
   'f': { '0' : 'f', '1' : 'f' } },
 [ 'c', 'd', 'e' ]
 );
-txt += '<h1>DFA</h1>' + dfa.toText() + '<br>' + Viz(dfa.toGraphViz());
+
+let txt = '<h1>DFA</h1>' + dfa.toText() + '<br>' + Viz(dfa.toGraphViz());
 
 dfa = dfa.minimize('states');
+
 txt += '<h1>Minimized DFA</h1>' + Viz(dfa.toGraphViz()) + '<br>' + dfa.toText();
 
 document.getElementById('output').innerHTML = txt;
