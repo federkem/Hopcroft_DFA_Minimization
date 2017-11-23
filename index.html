@@ -56,7 +56,7 @@ DFA.prototype.minimize = function (mode) {
 
 	// set of final states
 	let finalstates = new Set();
-	for (let i = 0 ; i < this.final.length ; i++) {
+	for (let i in this.final) {
 		finalstates.add(this.final[i]);
 	}
 
@@ -159,6 +159,8 @@ DFA.prototype.minimize = function (mode) {
 			case 'names':
 				txt = [...P[i]].join(',');
 				break;
+			default:
+				;
 		};
 		statenames.push(txt);
 	}
@@ -212,13 +214,6 @@ DFA.prototype.toText = function () {
 DFA.prototype.toGraphViz = function () {
 
 	let txt = 'digraph{rankdir=LR;node[shape=doublecircle]"' + this.final.join('" "') + '";node[shape=circle];';
-/*
-	let txt = 'digraph{rankdir=LR;node[shape=doublecircle]';
-	for (let i in this.final) {
-		txt += ' "' + this.final[i] + '"';
-	}
-	txt += ';node[shape=circle];';
-*/
 	for (let state in this.transition) {
 		let symbols = {};
 		for (let symbol in this.transition[state]) {
@@ -233,11 +228,12 @@ DFA.prototype.toGraphViz = function () {
 			txt += '"' + state + '"->"' + endstate + '"[label="' + symbols[endstate] + '"];';
 		}
 	}
-	return txt + '};';
+	return txt + '}';
 }
 
 // #####################################################
 
+// example found in https://en.wikipedia.org/wiki/DFA_minimization
 let dfa = new DFA(
 { 'a': { '0' : 'b', '1' : 'c' },
   'b': { '0' : 'a', '1' : 'd' },
@@ -248,9 +244,9 @@ let dfa = new DFA(
 [ 'c', 'd', 'e' ]
 );
 
-let txt = '<h1>DFA</h1>' + dfa.toText() + '<br>' + Viz(dfa.toGraphViz());
+let txt = '<h1>DFA</h1>'  + dfa.toText() + '<br>' + Viz(dfa.toGraphViz());
 
-dfa = dfa.minimize('states');
+dfa = dfa.minimize('names');
 
 txt += '<h1>Minimized DFA</h1>' + Viz(dfa.toGraphViz()) + '<br>' + dfa.toText();
 
