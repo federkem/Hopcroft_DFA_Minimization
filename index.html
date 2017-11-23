@@ -17,6 +17,11 @@ function DFA(transition, final) {
 }
 
 DFA.prototype.minimize = function (mode) {
+	// param: mode
+	// names of the merged states of the minimized DFA
+	// - 'digits'  : names are numbers starting at '0'
+	// - 'letters' : names are letter starting at 'a'
+	// - 'names'   : names are merged original names separated by ','
 
 	// returns true if set1 = set2
 	function equals (set1, set2) {
@@ -95,7 +100,7 @@ DFA.prototype.minimize = function (mode) {
 			}
 
 			if (X.size > 0) {
-				for (let j = 0 ; j < P.length ; k++) {
+				for (let j = 0 ; j < P.length ; j++) {
 					let Y = P[j];
 					let intersect = intersection(X, Y);
 					let diff = difference(Y, X);
@@ -103,7 +108,6 @@ DFA.prototype.minimize = function (mode) {
 					if (intersect.size > 0 && diff.size > 0) {
 						P.splice(j, 1, intersect, diff);
 
-						// Search if Y is in W
 						let found = false;
 						for (let k in W) {
 							if (equals(W[k], Y)) {
@@ -140,10 +144,10 @@ DFA.prototype.minimize = function (mode) {
 	for (let i in P) {
 		let txt = '';
         	switch (mode) {
-			case 'digit':
+			case 'digits':
 				txt = i.toString();
 				break;
-			case 'letter':
+			case 'letters':
 				let n = parseInt(i) + 1;
 				let offset = 'a'.charCodeAt(0);
 				while (n > 0) {
@@ -152,13 +156,8 @@ DFA.prototype.minimize = function (mode) {
 					n = Math.floor(n / 26);
 				}
 				break;
-			case 'states':
-				let state = [...P[i]];
-				let prefix = '';
-				for (let j in state) {
-					txt += prefix + state[j];
-					prefix = ',';
-				}
+			case 'names':
+				txt = [...P[i]].join(',');
 				break;
 		};
 		statenames.push(txt);
@@ -191,7 +190,7 @@ DFA.prototype.minimize = function (mode) {
 DFA.prototype.toText = function () {
 
 	let prefix;
-	let txt = "Transition:<br>[<br>";
+	let txt = "transition = {<br>";
 	for (let state in this.transition) {
 		txt += "&nbsp;&nbsp;&nbsp;'" + state + "' { ";
 		prefix = "";
@@ -199,24 +198,27 @@ DFA.prototype.toText = function () {
 			txt += prefix + "'" + symbol + "' : '" +  this.transition[state][symbol] + "'";
 			prefix = " , ";
 		}
-		txt += " }<br>";
+		txt += " },<br>";
 	}
-	txt += "]<br>Finals:<br>[ ";
+	txt += "};<br>final = [ ";
 	prefix = "";
 	for (let i = 0 ; i < this.final.length ; i++) {
 		txt += prefix + "'" + this.final[i] + "'";
 		prefix = " , ";
 	}
-	return txt + " ]";
+	return txt + " ];";
 }
 
 DFA.prototype.toGraphViz = function () {
 
+	let txt = 'digraph{rankdir=LR;node[shape=doublecircle]"' + this.final.join('" "') + '";node[shape=circle];';
+/*
 	let txt = 'digraph{rankdir=LR;node[shape=doublecircle]';
 	for (let i in this.final) {
 		txt += ' "' + this.final[i] + '"';
 	}
 	txt += ';node[shape=circle];';
+*/
 	for (let state in this.transition) {
 		let symbols = {};
 		for (let symbol in this.transition[state]) {
@@ -231,7 +233,7 @@ DFA.prototype.toGraphViz = function () {
 			txt += '"' + state + '"->"' + endstate + '"[label="' + symbols[endstate] + '"];';
 		}
 	}
-	return txt + '}';
+	return txt + '};';
 }
 
 // #####################################################
