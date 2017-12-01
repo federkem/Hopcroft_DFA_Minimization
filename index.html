@@ -7,217 +7,39 @@
 <body>
 <p id="output">&nbsp;</p>
 
+<script src="hopcroft.js"></script>
 <script src="viz-lite.js"></script>
 
 <script>
-
-function DFA(transition, final) {
-	this.transition = transition;
-	this.final = final;
-}
-
-DFA.prototype.minimize = function (mode) {
-	// param: mode
-	// names of the merged states of the minimized DFA
-	// - 'digits'  : names are numbers starting at '0'
-	// - 'letters' : names are letter starting at 'a'
-	// - 'names'   : names are merged original names separated by ','
-
-	// returns true if set1 = set2
-	function equals (set1, set2) {
-		if (set1.size !== set2.size)
-			return false;
-		for (let item of set2)
-			if (!set1.has(item))
-				return false;
-		return true;
-	}
-
-	// returns intersection of set1 and set2
-	function intersection (set1, set2) {
-		return new Set([...set1].filter(x => set2.has(x)));
-	}
-
-	// returns difference of set1 and set2
-	function difference (set1, set2) {
-		return new Set([...set1].filter(x => !set2.has(x)));
-	}
-
-	// set of states and symbols
-	let states = new Set();
-	let symbols = new Set();
-	for (let state in this.transition) {
-		states.add(state);
-		for (let symbol in this.transition[state]) {
-			symbols.add(symbol);
-		}
-	}
-	symbols = [...symbols].sort();
-
-	// set of final states
-	let finalstates = new Set();
-	for (let i in this.final) {
-		finalstates.add(this.final[i]);
-	}
-
-	// Minimize with the Hopcroft Algorithm
-	// http://en.wikipedia.org/wiki/DFA_minimization#Hopcroft.27s_algorithm
-	//
-	// P := {F, Q \ F};
-	// W := {F};
-	// while (W is not empty) do
-	//   choose and remove a set A from W
-	//   for each c in symbols do
-	//     let X be the set of states for which a transition on c leads to a state in A
-	//     for each set Y in P for which insersection(X,Y) is nonempty and Y \ X is nonempty do
-	//       replace Y in P by the two sets insersection(X,Y) and Y \ X
-	//       if Y is in W
-	//         replace Y in W by the same two sets
-	//       else
-	//         if |insersection(X,Y)| <= |Y \ X|
-	//           add insersection(X,Y) to W
-	//         else
-	//           add Y \ X to W
-	//     end;
-	//   end;
-	// end;
-
-	let P = new Array(difference(states, finalstates), finalstates);
-	let W = new Array(finalstates);
-
-	while (W.length > 0) {
-		let A = W.pop();
-
-		// For each c in symbols
-		for (let i in symbols) {
-			let c = symbols[i];
-
-			let X = new Set();
-			for (let state in this.transition) {
-				if (A.has(this.transition[state][c])) {
-					X.add(state);
-				}
-			}
-
-			if (X.size > 0) {
-				for (let j = 0 ; j < P.length ; j++) {
-					let Y = P[j];
-					let intersect = intersection(X, Y);
-					let diff = difference(Y, X);
-
-					if (intersect.size > 0 && diff.size > 0) {
-						P.splice(j, 1, intersect, diff);
-
-						let found = false;
-						for (let k in W) {
-							if (equals(W[k], Y)) {
-								W.splice(k, 1, intersect, diff);
-								found = true;
-								break;
-							}
-						}
-
-						if (!found) {
-							if (intersect.size <= diff.size) {
-								W.push(intersect);
-							} else {
-								W.push(diff);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	P.sort(function (set1, set2) {
-		let state1 = [...set1][0], state2 = [...set2][0];
-		if (state1 < state2)
-			return -1;
-		else if (state1 === state2)
-			return 0;
-		else
-			return 1;
-	});
-
-	let statenames = [];
-	for (let i in P) {
-		let txt = '';
-        	switch (mode) {
-			case 'digits':
-				txt = i.toString();
-				break;
-			case 'letters':
-				let n = parseInt(i) + 1;
-				let offset = 'a'.charCodeAt(0);
-				while (n > 0) {
-					n -= 1;
-					txt = String.fromCharCode((n % 26) + offset) + txt;
-					n = Math.floor(n / 26);
-				}
-				break;
-			case 'names':
-				txt = [...P[i]].join(',');
-				break;
-			default:
-				;
-		};
-		statenames.push(txt);
-	}
-
-	let newTransitions = {};
-	let newFinals = [];
-	for (let i in P) {
-		let stateinP = [...P[i]][0];
-		let newTrans = {};
-
-		for (let symbol in this.transition[stateinP]) {
-			for (let j in P) {
-				if (P[j].has(this.transition[stateinP][symbol])) {
-					newTrans[symbol] = statenames[j];
-					break;
-				}
-			}
-		}
-		newTransitions[statenames[i]] = newTrans;
-
-		if (this.final.includes(stateinP)) {
-			newFinals.push(statenames[i]);
-		}
-	}
-
-	return new DFA(newTransitions, newFinals);
-}
-
-DFA.prototype.toText = function () {
+function dfa2Text(dfa) {
 
 	let prefix;
 	let txt = "transition = {<br>";
-	for (let state in this.transition) {
+	for (let state in dfa.transition) {
 		txt += "&nbsp;&nbsp;&nbsp;'" + state + "' { ";
 		prefix = "";
-		for (let symbol in this.transition[state]) {
-			txt += prefix + "'" + symbol + "' : '" +  this.transition[state][symbol] + "'";
+		for (let symbol in dfa.transition[state]) {
+			txt += prefix + "'" + symbol + "' : '" +  dfa.transition[state][symbol] + "'";
 			prefix = " , ";
 		}
 		txt += " },<br>";
 	}
 	txt += "};<br>final = [ ";
 	prefix = "";
-	for (let i = 0 ; i < this.final.length ; i++) {
-		txt += prefix + "'" + this.final[i] + "'";
+	for (let i = 0 ; i < dfa.final.length ; i++) {
+		txt += prefix + "'" + dfa.final[i] + "'";
 		prefix = " , ";
 	}
 	return txt + " ];";
 }
 
-DFA.prototype.toGraphViz = function () {
+function dfa2GraphViz(dfa) {
 
-	let txt = 'digraph{rankdir=LR;node[shape=doublecircle]"' + this.final.join('" "') + '";node[shape=circle];';
-	for (let state in this.transition) {
+	let txt = 'digraph{rankdir=LR;node[shape=doublecircle]"' + dfa.final.join('" "') + '";node[shape=circle];';
+	for (let state in dfa.transition) {
 		let symbols = {};
-		for (let symbol in this.transition[state]) {
-			let endstate = this.transition[state][symbol];
+		for (let symbol in dfa.transition[state]) {
+			let endstate = dfa.transition[state][symbol];
 			if (symbols[endstate] === undefined) {
 				symbols[endstate] = symbol;
 			} else {
@@ -244,13 +66,12 @@ let dfa = new DFA(
 [ 'c', 'd', 'e' ]
 );
 
-let txt = '<h1>DFA</h1>'  + dfa.toText() + '<br>' + Viz(dfa.toGraphViz());
+let dfa_min = dfa.minimize('names');
 
-dfa = dfa.minimize('names');
-
-txt += '<h1>Minimized DFA</h1>' + Viz(dfa.toGraphViz()) + '<br>' + dfa.toText();
-
-document.getElementById('output').innerHTML = txt;
+document.getElementById('output').innerHTML = '<h1>DFA</h1>'  + dfa2Text(dfa) + '<br>' + Viz(dfa2GraphViz(dfa))
+	+ '<h1>Minimized DFA (minimize("names"))</h1>' + Viz(dfa2GraphViz(dfa_min)) + '<br>' + dfa2Text(dfa_min)
+	+ '<h1>Minimized DFA (minimize("letters"))</h1>' + Viz(dfa2GraphViz(dfa.minimize('letters')))
+	+ '<h1>Minimized DFA (minimize("digits"))</h1>' + Viz(dfa2GraphViz(dfa.minimize('digits')))
 
 </script>
 </body>
