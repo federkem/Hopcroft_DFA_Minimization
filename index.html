@@ -1,78 +1,78 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="utf-8">
-<title>Hopcroft DFA Minimization</title>
-</head>
-<body>
-<p id="output">&nbsp;</p>
+	<head>
+		<meta charset="utf-8">
+		<title>Hopcroft DFA Minimization</title>
+	</head>
+	<body>
+		<p id="output">&nbsp;</p>
 
-<script src="hopcroft.js"></script>
-<script src="viz-lite.js"></script>
+		<script src="hopcroft.js"></script>
+		<script src="viz-lite.js"></script>
 
-<script>
-function dfa2Text(dfa) {
+		<script>
+			function dfa2Text( dfa ) {
 
-	let prefix;
-	let txt = "transition = {<br>";
-	for (let state in dfa.transition) {
-		txt += "&nbsp;&nbsp;&nbsp;'" + state + "' { ";
-		prefix = "";
-		for (let symbol in dfa.transition[state]) {
-			txt += prefix + "'" + symbol + "' : '" +  dfa.transition[state][symbol] + "'";
-			prefix = " , ";
-		}
-		txt += " },<br>";
-	}
-	txt += "};<br>final = [ ";
-	prefix = "";
-	for (let i = 0 ; i < dfa.final.length ; i++) {
-		txt += prefix + "'" + dfa.final[i] + "'";
-		prefix = " , ";
-	}
-	return txt + " ];";
-}
-
-function dfa2GraphViz(dfa) {
-
-	let txt = 'digraph{rankdir=LR;node[shape=doublecircle]"' + dfa.final.join('" "') + '";node[shape=circle];';
-	for (let state in dfa.transition) {
-		let symbols = {};
-		for (let symbol in dfa.transition[state]) {
-			let endstate = dfa.transition[state][symbol];
-			if (symbols[endstate] === undefined) {
-				symbols[endstate] = symbol;
-			} else {
-				symbols[endstate] += ',' + symbol;
+				let prefix;
+				let txt = 'transition = {<br>';
+				for ( let state in dfa.transition ) {
+					txt += '&nbsp;&nbsp;&nbsp;\'' + state + '\' { ';
+					prefix = '';
+					for ( let symbol in dfa.transition[ state ] ) {
+						txt += prefix + '\'' + symbol + '\' : \'' +  dfa.transition[ state ][ symbol ] + '\'';
+						prefix = ' , ';
+					}
+					txt += ' },<br>';
+				}
+				txt += '};<br>final = [ ';
+				prefix = '';
+				for ( let i = 0 ; i < dfa.final.length ; i++ ) {
+					txt += prefix + '\'' + dfa.final[ i ] + '\'';
+					prefix = ' , ';
+				}
+				return txt + ' ];';
 			}
-		}
-		for (let endstate in symbols) {
-			txt += '"' + state + '"->"' + endstate + '"[label="' + symbols[endstate] + '"];';
-		}
-	}
-	return txt + '}';
-}
 
-// #####################################################
+			function dfa2GraphViz( dfa ) {
 
-// example found in https://en.wikipedia.org/wiki/DFA_minimization
-let dfa = new DFA(
-{ 'a': { '0' : 'b', '1' : 'c' },
-  'b': { '0' : 'a', '1' : 'd' },
-  'c': { '0' : 'e', '1' : 'f' },
-  'd': { '0' : 'e', '1' : 'f' },
-  'e': { '0' : 'e', '1' : 'f' },
-  'f': { '0' : 'f', '1' : 'f' } },
-[ 'c', 'd', 'e' ]
-);
+				let txt = 'digraph{rankdir=LR;node[shape=doublecircle]"' + dfa.final.join('" "') + '";node[shape=circle];';
+				for ( let state in dfa.transition ) {
+					let symbols = {};
+					for ( let symbol in dfa.transition[ state ] ) {
+						let endstate = dfa.transition[ state ][ symbol ];
+						if ( symbols[ endstate ] === undefined ) {
+							symbols[ endstate ] = symbol;
+						} else {
+							symbols[ endstate ] += ',' + symbol;
+						}
+					}
+					for ( let endstate in symbols ) {
+						txt += '"' + state + '"->"' + endstate + '"[label="' + symbols[ endstate ] + '"];';
+					}
+				}
+				return txt + '}';
+			}
 
-let dfa_min = dfa.minimize('names');
+			// #####################################################
 
-document.getElementById('output').innerHTML = '<h1>DFA</h1>'  + dfa2Text(dfa) + '<br>' + Viz(dfa2GraphViz(dfa))
-	+ '<h1>Minimized DFA (minimize("names"))</h1>' + Viz(dfa2GraphViz(dfa_min)) + '<br>' + dfa2Text(dfa_min)
-	+ '<h1>Minimized DFA (minimize("letters"))</h1>' + Viz(dfa2GraphViz(dfa.minimize('letters')))
-	+ '<h1>Minimized DFA (minimize("digits"))</h1>' + Viz(dfa2GraphViz(dfa.minimize('digits')))
+			// example found in https://en.wikipedia.org/wiki/DFA_minimization
+			let dfa = new DFA(
+				{ 'a': { '0' : 'b', '1' : 'c' },
+				  'b': { '0' : 'a', '1' : 'd' },
+				  'c': { '0' : 'e', '1' : 'f' },
+				  'd': { '0' : 'e', '1' : 'f' },
+				  'e': { '0' : 'e', '1' : 'f' },
+				  'f': { '0' : 'f', '1' : 'f' } },
+				[ 'c', 'd', 'e' ]
+			);
 
-</script>
-</body>
+			let dfa_min = dfa.minimize( 'names' );
+
+			document.getElementById( 'output' ).innerHTML = '<h1>DFA</h1>'  + dfa2Text( dfa ) + '<br>' + Viz( dfa2GraphViz( dfa ) )
+				+ '<h1>Minimized DFA (minimize("names"))</h1>' + Viz( dfa2GraphViz( dfa_min ) ) + '<br>' + dfa2Text( dfa_min )
+				+ '<h1>Minimized DFA (minimize("letters"))</h1>' + Viz( dfa2GraphViz( dfa.minimize( 'letters' ) ) )
+				+ '<h1>Minimized DFA (minimize("digits"))</h1>' + Viz( dfa2GraphViz( dfa.minimize( 'digits' ) ) );
+
+		</script>
+	</body>
 </html>
