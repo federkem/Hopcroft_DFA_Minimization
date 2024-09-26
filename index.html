@@ -5,7 +5,7 @@
 		<title>Hopcroft DFA Minimization</title>
 	</head>
 	<body>
-		<p id="output">&nbsp;</p>
+		<div id="output">&nbsp;</div>
 
 		<script src="hopcroft.js"></script>
 		<script src="viz-lite.js"></script>
@@ -66,12 +66,17 @@
 				[ 'c', 'd', 'e' ]
 			);
 
-			let dfa_min = dfa.minimize( 'names' );
+			let dfa_min_names = dfa.minimize( 'names' );
+			let dfa_min_letters = dfa.minimize( 'letters' );
+			let dfa_min_digits = dfa.minimize( 'digits' );
 
 			document.getElementById( 'output' ).innerHTML = '<h1>DFA</h1>'  + dfa2Text( dfa ) + '<br>' + Viz( dfa2GraphViz( dfa ) )
-				+ '<h1>Minimized DFA (minimize("names"))</h1>' + Viz( dfa2GraphViz( dfa_min ) ) + '<br>' + dfa2Text( dfa_min )
-				+ '<h1>Minimized DFA (minimize("letters"))</h1>' + Viz( dfa2GraphViz( dfa.minimize( 'letters' ) ) )
-				+ '<h1>Minimized DFA (minimize("digits"))</h1>' + Viz( dfa2GraphViz( dfa.minimize( 'digits' ) ) );
+				+ '<h1>Minimized DFA (minimize("names"))</h1>' + Viz( dfa2GraphViz( dfa_min_names ) )
+				+ '<br>' + dfa2Text( dfa_min_names )
+				+ '<h1>Minimized DFA (minimize("letters"))</h1>' + Viz( dfa2GraphViz( dfa_min_letters ) )
+				+ '<br>' + dfa2Text( dfa_min_letters )
+				+ '<h1>Minimized DFA (minimize("digits"))</h1>' + Viz( dfa2GraphViz( dfa_min_digits ) )
+				+ '<br>' + dfa2Text( dfa_min_digits );
 
 		</script>
 	</body>
