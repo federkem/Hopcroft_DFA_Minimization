@@ -14,7 +14,7 @@
 			function dfa2Text( dfa ) {
 
 				let prefix;
-				let txt = 'transition = {<br>';
+				let txt = '<pre>transition = {<br>';
 				for ( let state in dfa.transition ) {
 					txt += '&nbsp;&nbsp;&nbsp;\'' + state + '\' { ';
 					prefix = '';
@@ -30,7 +30,7 @@
 					txt += prefix + '\'' + dfa.final[ i ] + '\'';
 					prefix = ' , ';
 				}
-				return txt + ' ];';
+				return txt + ' ];</pre>';
 			}
 
 			function dfa2GraphViz( dfa ) {
